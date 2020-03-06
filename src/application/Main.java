@@ -11,7 +11,9 @@ import java.util.*;
 import java.util.Random;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
+import javafx.event.EventHandler;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -30,12 +32,15 @@ public class Main extends Application {
 	static ArrayList<Puzzles> list = new ArrayList<Puzzles>();
 	static String hint, sentence, encryptSentence;
 	static int diff;
+	static Puzzles currPuzzle;
 	protected static Stage st;
 	static Random rand;
 	static TextField textField[];
 	static HBox hpanep[];
 	static Label encrypt_l[];
 	static GridPane gPanePMain = new GridPane();
+	static boolean[] alphaGuessed;
+	static int[] freq;
 	
 	@Override
 	public void start(Stage primaryStage) {
@@ -75,7 +80,7 @@ public class Main extends Application {
 	
 	static void buildGui(){
 		try {
-			st.setHeight(260);
+			st.setHeight(240);
 		    st.setWidth(670);
 			HBox hpaneb = new HBox(10);
 			VBox vpanel = new VBox(10);
@@ -83,23 +88,26 @@ public class Main extends Application {
 			Scene scene = new Scene(gpane,400,400);
 			
 			Button addPuzzle = new Button("Add Puzzle");
-			Button ExitB = new Button("Exit");
+//			Button ExitB = new Button("Exit");
 			Button Reset = new Button("Reset");
 			Button newPuzz = new Button("New");
 			Button HintMe = new Button("Give Hint");
 			Button Submit = new Button("Submit");
-			Button About = new Button("About the game");
+			Button About = new Button("About");
 			
 			Label UnusedAlpha = new Label("Unused Alphabets are: -");
 			Label AlphaFre = new Label("Frequency of each Alphabets is: -");
+			Label UnusedAlphaV = new Label("");
+			Label AlphaFreV = new Label("");
 			Label hint_l = new Label("");
 			
 			addPuzzle.setPrefWidth(100);
-			ExitB.setPrefWidth(100);
+//			ExitB.setPrefWidth(100);
 			Reset.setPrefWidth(100);
 			HintMe.setPrefWidth(100);
 			newPuzz.setPrefWidth(100);
 			Submit.setPrefWidth(100);
+			About.setPrefWidth(100);
 			
 			Reset.setDisable(true);
 			HintMe.setDisable(true);
@@ -134,17 +142,19 @@ public class Main extends Application {
 		        newPuzzle();
 		    });
 			
-			ExitB.setOnAction(e -> {
-				try {
-					file_write();
-				} catch (FileNotFoundException e1) {
-					e1.printStackTrace();
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
-		    });
+//			ExitB.setOnAction(e -> {
+//				try {
+//					file_write();
+//				} catch (FileNotFoundException e1) {
+//					e1.printStackTrace();
+//				} catch (IOException e1) {
+//					e1.printStackTrace();
+//				}
+//		    });
 			
 			newPuzz.setOnAction(e ->{
+				alphaGuessed = new boolean[26];
+				freq = new int[26];
 				GridPane gPaneP = new GridPane();
 				gPaneP.getChildren().removeAll();
 				gPaneP.getChildren().clear();
@@ -152,11 +162,11 @@ public class Main extends Application {
 				gPanePMain.getChildren().clear();
 				Reset.setDisable(false);
 				rand = new Random();
-				Puzzles currPuzzle = list.get(rand.nextInt(list.size()));
+				currPuzzle = list.get(rand.nextInt(list.size()));
 				sentence = currPuzzle.getSentence();
 				hint = currPuzzle.getHint();
 				diff = currPuzzle.getDiff();
-				//hint_l.setText("The below puzzle is about: -" + hint + "\tDifficulty: - " + diff);
+//				hint_l.setText("The below puzzle is about: -" + hint + "\tDifficulty of Puzzle: - " + diff);
 				encryptSentence = encrypt(sentence);
 				textField = new TextField[encryptSentence.length()];
 				encrypt_l = new Label[encryptSentence.length()];
@@ -164,7 +174,7 @@ public class Main extends Application {
 				System.out.println(encryptSentence);
 				int cnt = 0;
 				int j = 0;
-				//gPanePMain.add(hint_l,0,0);
+//				gPanePMain.add(hint_l,0,0);
 				for(int i = 0; i < encryptSentence.length(); i++){
 					cnt++;
 					
@@ -180,7 +190,6 @@ public class Main extends Application {
 				                     return null;
 				            	}
 			            		if(!Character.isUpperCase(newText.charAt(0))){
-			            			System.out.println("Here");
 			            			change.setText(newText.toUpperCase());
 			            		}
 			            	}
@@ -192,9 +201,16 @@ public class Main extends Application {
 					textField[i].textProperty().addListener((obs, oldVal, newVal) -> {
 				        System.out.println("Text of Textfield on index " + index + " changed from " + oldVal
 				                + " to " + newVal);
+				        if(oldVal.length() > 0) alphaGuessed[oldVal.charAt(0) - 65] = false;
+				        if(newVal.length() > 0) alphaGuessed[newVal.charAt(0) - 65] = true;
+				        UnusedAlphaV.setText(getUnused());
+				        vpanel.getChildren().removeAll();
+				        vpanel.getChildren().clear();
+				        vpanel.getChildren().addAll(UnusedAlpha,UnusedAlphaV, AlphaFre,AlphaFreV);
 				    });
 					if(encryptSentence.charAt(i) != ' '){
 						gPaneP.add(textField[i], i%18, j + 1);
+						freq[encryptSentence.charAt(i) - 65]++;
 					}
 					encrypt_l[i] = new Label("  " + Character.toString(encryptSentence.charAt(i)));
 					gPaneP.add(encrypt_l[i], i%18, j+2);
@@ -204,22 +220,40 @@ public class Main extends Application {
 					}
 				}
 				gPanePMain.add(gPaneP, 0, 0);
-				System.out.println(260 + (52 * ((encryptSentence.length() / 18) + 1)));
-				st.setHeight(260 + (52 * ((encryptSentence.length() / 18) + 1)));//65
+				AlphaFreV.setText(getFre());
+				UnusedAlphaV.setText(getUnused());
+//				System.out.println(260 + (52 * ((encryptSentence.length() / 18) + 1)));
+				vpanel.getChildren().removeAll();
+		        vpanel.getChildren().clear();
+		        vpanel.getChildren().addAll(UnusedAlpha,UnusedAlphaV, AlphaFre,AlphaFreV);
+				st.setHeight(280 + (65 * ((encryptSentence.length() / 18) + 1)));//65
 			});
 			
+			st.setOnCloseRequest(new EventHandler<WindowEvent>() {
+	          public void handle(WindowEvent we) {
+	        	  try {
+						file_write();
+					} catch (FileNotFoundException e1) {
+						e1.printStackTrace();
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+	              System.out.println("Stage is closing");
+	          }});
+		          
 			Reset.setOnAction(e ->{
 				for(int i = 0; i < encryptSentence.length(); i++){
-					textField[i].setText("\0");
+					textField[i].setText("");
 				}
 			});
 			
-			hpaneb.getChildren().addAll(Reset, newPuzz, HintMe, addPuzzle,Submit, ExitB);
-			vpanel.getChildren().addAll(UnusedAlpha, AlphaFre);
+			hpaneb.getChildren().addAll(Reset, newPuzz, HintMe, addPuzzle,Submit, About);
+			if(UnusedAlphaV.getText().length() == 0) vpanel.getChildren().addAll(UnusedAlpha, AlphaFre);
+			else vpanel.getChildren().addAll(UnusedAlpha,UnusedAlphaV, AlphaFre,AlphaFreV);
 			gpane.add(hpaneb,0,0);
 			gpane.add(gPanePMain,0,1);
 			gpane.add(vpanel, 0, 2);
-			gpane.add(About, 0, 3);
+//			gpane.add(About, 0, 3);
 			st.setScene(scene);
 			st.show();
 		} catch(Exception e) {
@@ -229,7 +263,7 @@ public class Main extends Application {
 	
 	static void newPuzzle(){
 		
-		Label hint_l = new Label("Hint");
+		Label hint_l = new Label("Hint(Max 30 char)");
 		Label sentence_l = new Label("Sentence(only alphabets & space allowed)");
 		Label errors_l = new Label("");
 		Label diff_l = new Label("Difficulty(1 - 5)");
@@ -239,13 +273,19 @@ public class Main extends Application {
 		String diffLevel[] = {"1","2","3","4","5"}; 
 
  // Create a combo box 
-		ComboBox combo_box = new ComboBox(FXCollections.observableArrayList(diffLevel));
-		
-		errord_e.setTextFill(Color.RED);
+		ComboBox<String> combo_box = new ComboBox<String>(FXCollections.observableArrayList(diffLevel));
 		
 		TextField hint_txt = new TextField("");
 		TextField sentence_txt = new TextField("");
 //		TextField diff_txt = new TextField("");
+		
+		hint_txt.setTextFormatter(new TextFormatter<String>((Change change) -> {
+            String newText = change.getControlNewText();
+            if (newText.length() > 30) {
+                return null ;
+            }
+            return change ;
+        }));
 		
 		Button add = new Button("Add Puzzle");
 		Button back = new Button("Back");
@@ -292,22 +332,24 @@ public class Main extends Application {
 		
 		add.setOnAction(e -> {
 			
-			combo_box.setValue(null);
+//			combo_box.getSelectionModel().clearSelection();
 	        hint = hint_txt.getText();
 	        sentence = sentence_txt.getText().toUpperCase();
 	        int x;
 	        
 	        if(hint.length() == 0 || sentence.length() == 0){
 	        	errord_e.setText("Please enter all the details");
+	        	errord_e.setTextFill(Color.RED);
 	        	return;
 	        }
-	        else errord_e.setText("");
 	        
 	        try{
-	        	x = Integer.parseInt((String) combo_box.getValue());
+	        	x = Integer.parseInt(combo_box.getValue().toString());
+	        	combo_box.valueProperty().set(null);
 	        }catch(Exception z){
 //	        	z.printStackTrace();
 	        	errord_e.setText("Select a value from dropdown");
+	        	errord_e.setTextFill(Color.RED);
 	        	return;
 	        }
 	      
@@ -318,6 +360,8 @@ public class Main extends Application {
 	        sentence_txt.setText("");
 //	        diff_txt.setText("");
 	        hint_txt.setText("");
+	        errord_e.setText("Puzzle added");
+	        errord_e.setTextFill(Color.BLUE);
 	    });
 		
 		back.setOnAction(e -> {
@@ -352,5 +396,28 @@ public class Main extends Application {
 			}
 		}
 		return op.toString();
+	}
+	
+	private static String getFre(){
+		StringBuilder frestr = new StringBuilder();
+		for(int i = 0; i < 26; i++){
+			if(freq[i] == 0) continue;
+			frestr.append(((char)(i + 65)));
+//			frestr.append(" ");
+			frestr.append(freq[i]);
+			frestr.append(";");
+		}
+		return frestr.toString();
+	}
+	
+	private static String getUnused(){
+		StringBuilder unusedstr = new StringBuilder();
+		for(int i = 0; i < 26; i++){
+			if(!alphaGuessed[i]){
+				unusedstr.append((char)(i + 65));
+				unusedstr.append(" ");
+			}
+		}
+		return unusedstr.toString();
 	}
 }
