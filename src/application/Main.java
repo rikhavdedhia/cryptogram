@@ -1,25 +1,19 @@
 package application;
 	
-import java.io.EOFException;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.*;
-import java.util.Random;
+import java.util.Map.Entry;
+import application.PuzzleCollection.EmptyListException;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
-import javafx.event.EventHandler;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.control.TextFormatter.Change;
@@ -29,61 +23,35 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 
-import java.util.HashMap;
-
 
 public class Main extends Application {
 	
-	static ArrayList<Puzzles> list = new ArrayList<Puzzles>();
-	static String hint, sentence, encryptSentence;
-	static int diff;
-	static Puzzles currPuzzle;
-	protected static Stage st;
-	static Random rand;
-	static TextField textField[];
-	static HBox hpanep[];
-	static Label encrypt_l[];
-	static GridPane gPanePMain = new GridPane();
-	static GridPane gPaneH = new GridPane();
-	static GridPane gPaneP = new GridPane();
-	static boolean[] alphaGuessed;
-	static int[] freq;
-	static HashMap<Character, ArrayList<Integer>> textboxes;
-	static ArrayList<Integer> textboxIndices;
-	static boolean doubleAlpha = false;
-	static int hintcnt;
+	private static String encryptSentence;
+	private static PuzzleCollection pc;
+	private static Stage st;
+	private static TextField textField[];
+	private static TextField encrypt_t[];
+	private static boolean[] alphaGuessed;
+	private static int[] freq;
+	private static HashMap<Character, ArrayList<Integer>> textboxes;
+	private static ArrayList<Integer> textboxIndices;
+	private static boolean doubleAlpha = false;
+	private static int hintcnt;
 	
 	@Override
 	public void start(Stage primaryStage) {
 		st = primaryStage;
 		st.setResizable(false);
 		st.setTitle("Cryptogram");
+		System.out.println("SPM Project: A Cryptogram\nCode by:- \n\tRikhav Nilesh Dedhia\n\tRishikesh Maddi"
+				+ "\n\tDaksh Parikh\n\tKrina Karia");
 		try{
-			System.out.println("SPM Project: A Cryptogram\nCode by:- \n\tRikhav Nilesh Dedhia\n\tRishikesh Maddi"
-					+ "\n\tDaksh Parikh\n\tKrina Karia");
-			FileInputStream file_ip = new FileInputStream("Puzzle_database.txt");
-			ObjectInputStream file = new ObjectInputStream(file_ip);
-			try{
-				while (true){
-					Puzzles P = (Puzzles) file.readObject();
-					list.add(P);
-				}
-			}
-			catch(EOFException eof){}
-			file.close();
-	        buildGui();
-			}
-		catch (FileNotFoundException e){
-	        newPuzzle();
-		} 
-		catch (IOException e) {
-			e.printStackTrace();
+			pc = new PuzzleCollection();
+			buildGui();
 		}
-		catch (ClassNotFoundException e) {
-			e.printStackTrace();
+		catch (FileNotFoundException | EmptyListException e) {
+			verifyAdmin();
 		}
-		if(list.size() == 0) newPuzzle();
-		else buildGui();
 	}
 	
 	public static void main(String[] args) {
@@ -94,113 +62,93 @@ public class Main extends Application {
 		try {
 			st.setHeight(255);
 		    st.setWidth(670);
-			HBox hpaneb = new HBox(10);
-			VBox vpanel = new VBox(10);
-			GridPane gpane = new GridPane();
-			Scene scene = new Scene(gpane,400,400);
+			HBox ButtonPane = new HBox(10);
+			VBox UnusedFrePane = new VBox(10);
 			
-			Button admin = new Button("Admin");
-//			Button ExitB = new Button("Exit");
-			Button Reset = new Button("Reset");
-			Button newPuzz = new Button("New");
-			Button HintMe = new Button("Give Hint");
-			Button Submit = new Button("Submit");
-			Button About = new Button("About");
+			GridPane MainPain = new GridPane();
+			GridPane HintDiffPane = new GridPane();
+			GridPane PuzzlePane = new GridPane();
 			
-			Label UnusedAlpha = new Label("Unused Alphabets are: -");
-			Label AlphaFre = new Label("Frequency of each Alphabets is: -");
-			Label UnusedAlphaV = new Label("");
-			Label AlphaFreV = new Label("");
-			Label hint_l = new Label("");
-			Label diff_l = new Label("");
+			Scene scene = new Scene(MainPain,400,400);
+			
+			Button Admin_B = new Button("Admin");
+			Button Reset_B = new Button("Reset");
+			Button NewPuzz_B = new Button("New Game");
+			Button HintMe_B = new Button("Give Hint");
+			Button Submit_B = new Button("Submit");
+			Button About_B = new Button("About");
+			
+			Label UnusedAlpha_L = new Label("Unused Alphabets are: -");
+			Label AlphaFre_L = new Label("Frequency of each Alphabets is: -");
+			Label UnusedAlphaV_L = new Label("");
+			Label AlphaFreV_L = new Label("");
+			Label Hint_L = new Label("");
+			Label Diff_L = new Label("");
+			
+			String Style = "-fx-padding: 10;" + 
+	                  "-fx-border-style: solid inside;" + 
+	                  "-fx-border-width: 2;" +
+	                  "-fx-border-insets: 5;" + 
+	                  "-fx-border-radius: 0;" + 
+	                  "-fx-border-color: blue;";
 
 			Font fSize = new Font(25);
 			
-			admin.setPrefWidth(100);
-//			ExitB.setPrefWidth(100);
-			Reset.setPrefWidth(100);
-			HintMe.setPrefWidth(100);
-			newPuzz.setPrefWidth(100);
-			Submit.setPrefWidth(100);
-			About.setPrefWidth(100);
+			Admin_B.setPrefWidth(100);
+			Reset_B.setPrefWidth(100);
+			HintMe_B.setPrefWidth(100);
+			NewPuzz_B.setPrefWidth(100);
+			Submit_B.setPrefWidth(100);
+			About_B.setPrefWidth(100);
 			
-			UnusedAlphaV.setFont(fSize);
-			AlphaFreV.setFont(fSize);
-			hint_l.setFont(fSize);
-			diff_l.setFont(fSize);
+			UnusedAlphaV_L.setFont(fSize);
+			AlphaFreV_L.setFont(fSize);
+			Hint_L.setFont(fSize);
+			Diff_L.setFont(fSize);
 			
-			Reset.setDisable(true);
-			HintMe.setDisable(true);
-			Submit.setDisable(true);
+			ButtonPane.setStyle(Style);
+			UnusedFrePane.setStyle(Style);
+			HintDiffPane.setStyle(Style);
+			PuzzlePane.setStyle(Style);
 			
-			hpaneb.setStyle("-fx-padding: 10;" + 
-	                  "-fx-border-style: solid inside;" + 
-	                  "-fx-border-width: 2;" +
-	                  "-fx-border-insets: 5;" + 
-	                  "-fx-border-radius: 0;" + 
-	                  "-fx-border-color: blue;");
-			
-			vpanel.setStyle("-fx-padding: 10;" + 
-	                  "-fx-border-style: solid inside;" + 
-	                  "-fx-border-width: 2;" +
-	                  "-fx-border-insets: 5;" + 
-	                  "-fx-border-radius: 0;" + 
-	                  "-fx-border-color: blue;");
-			
-			gPanePMain.setStyle("-fx-padding: 10;" + 
-	                  "-fx-border-style: solid inside;" + 
-	                  "-fx-border-width: 2;" +
-	                  "-fx-border-insets: 5;" + 
-	                  "-fx-border-radius: 0;" + 
-	                  "-fx-border-color: blue;");
-			
-			gPaneH.setStyle("-fx-padding: 10;" + 
-	                  "-fx-border-style: solid inside;" + 
-	                  "-fx-border-width: 2;" +
-	                  "-fx-border-insets: 5;" + 
-	                  "-fx-border-radius: 0;" + 
-	                  "-fx-border-color: blue;");
-			
-			admin.setOnAction(e -> {
-				gPanePMain.getChildren().removeAll();
-				gPanePMain.getChildren().clear();
+			Admin_B.setOnAction(e -> {
+				PuzzlePane.getChildren().removeAll();
+				PuzzlePane.getChildren().clear();
 		        verifyAdmin();
 		    });
 				
-			newPuzz.setOnAction(e ->{
-				hintcnt = 0;
+			NewPuzz_B.setOnAction(e ->{
 				textboxes = new HashMap<Character, ArrayList<Integer>>();
 				alphaGuessed = new boolean[26];
 				freq = new int[26];
-				gPaneP.getChildren().removeAll();
-				gPaneP.getChildren().clear();
-				gPanePMain.getChildren().removeAll();
-				gPanePMain.getChildren().clear();
-				gPaneH.getChildren().removeAll();
-				gPaneH.getChildren().clear();
-				Reset.setDisable(false);
-				Submit.setDisable(false);
-				HintMe.setDisable(false);
-				rand = new Random();
-				currPuzzle = list.get(rand.nextInt(list.size()));
-				sentence = currPuzzle.getSentence();
-				hint = currPuzzle.getHint();
-				diff = currPuzzle.getDiff();
-				hint_l.setText("Puzzle is about: - " + hint);
-				diff_l.setText("Difficulty of Puzzle: - " + diff);
-				gPaneH.add(hint_l,0,0);
-				gPaneH.add(diff_l,0,1);
-				encryptSentence = encrypt(sentence);
-				textField = new TextField[encryptSentence.length()];
-				encrypt_l = new Label[encryptSentence.length()];
-				System.out.println(sentence);
+				
+				PuzzlePane.getChildren().removeAll();
+				PuzzlePane.getChildren().clear();
+				HintDiffPane.getChildren().removeAll();
+				HintDiffPane.getChildren().clear();
+				
+				hintcnt = 0;
+				HintMe_B.setDisable(false);
+				pc.SelectPuzzle();
+				
+				Hint_L.setText("Puzzle is about: - " + pc.pcGetHint());
+				Diff_L.setText("Difficulty of Puzzle: - " + pc.pcGetDiff());
+				HintDiffPane.add(Hint_L,0,0);
+				HintDiffPane.add(Diff_L,0,1);
+				encryptSentence = pc.encrypt();
 				System.out.println(encryptSentence);
+				
+				textField = new TextField[encryptSentence.length()];
+				encrypt_t = new TextField[encryptSentence.length()];
+				
 				int cnt = 0;
 				int j = 0;
 				for(int i = 0; i < encryptSentence.length(); i++){
 					cnt++;
 					
 					textField[i] = new TextField();
+					
+					//Formatter to ensure only 1 Capital alphabet
 					textField[i].setTextFormatter(new TextFormatter<String>((Change change) -> {
 			            String newText = change.getControlNewText();
 			            if (newText.length() > 1) {
@@ -218,20 +166,21 @@ public class Main extends Application {
 			                return change ;
 			            }
 			        }));
+					
 					textField[i].setMaxWidth(35);
+				
+					//Setting the listener to each textbox to listen to any alphabet entered	
 					final int index = i;
 					textField[i].textProperty().addListener((obs, oldVal, newVal) -> {
-				        System.out.println("Text of Textfield on index " + index + " changed from " + oldVal
-				                + " to " + newVal);
 				        if(textboxIndices.size() > 0){
 				        	return;
 				        }
+				        
 				        //10 - Check if alphabet entered twice by - Rikhav
 				        if(newVal.length() > 0){
 				        	if(checkAlpha(newVal.charAt(0))){
 				        		Alert alert = new Alert(AlertType.ERROR);
 				                alert.setTitle("Error");
-//				                alert.setHeaderText("");
 				                alert.setContentText("Alphabet \""+newVal + "\" already used");
 				                alert.showAndWait();
 				                doubleAlpha = true;
@@ -239,21 +188,36 @@ public class Main extends Application {
 				                return;
 				        	}
 				        }
+				        
 				        if(doubleAlpha){
 				        	doubleAlpha = false;
 				        	return;
-				        }				        
+				        }
+				        
 				        updateTextBoxes(encryptSentence.charAt(index), newVal);
 				        if(oldVal.length() > 0) alphaGuessed[oldVal.charAt(0) - 65] = false;
-//				        if(newVal.length() > 0) alphaGuessed[newVal.charAt(0) - 65] = true;
-				        UnusedAlphaV.setText(getUnused());
-				        vpanel.getChildren().removeAll();
-				        vpanel.getChildren().clear();
-				        vpanel.getChildren().addAll(UnusedAlpha,UnusedAlphaV, AlphaFre,AlphaFreV);
+				        UnusedAlphaV_L.setText(getUnused());
+				        UnusedFrePane.getChildren().removeAll();
+				        UnusedFrePane.getChildren().clear();
+				        UnusedFrePane.getChildren().addAll(UnusedAlpha_L,UnusedAlphaV_L, AlphaFre_L,AlphaFreV_L);
 				    });
+					
+					encrypt_t[i] = new TextField(Character.toString(encryptSentence.charAt(i)));
+					encrypt_t[i].setStyle("-fx-box-border: none;"+
+										  "-fx-background-insets: 0;"+
+										  "-fx-background-color: transparent, transparent;"+
+										  "-fx-background-radius: 0, 0, 0, 0;"+
+										  "-fx-text-inner-color: black;"+
+										  "-fx-opacity: 1.0;");
+					encrypt_t[i].setMaxWidth(35);
+					encrypt_t[i].setDisable(true);
+					
 					if(encryptSentence.charAt(i) != ' '){
-						gPaneP.add(textField[i], i%18, j + 1);
+						
+						PuzzlePane.add(textField[i], i%18, j + 1);
 						freq[encryptSentence.charAt(i) - 65]++;
+						
+						//Mapping each unique encrypted character to the indices of textbox
 						if(textboxes.containsKey(encryptSentence.charAt(i))){
 							textboxIndices = textboxes.get(encryptSentence.charAt(i));
 						}
@@ -263,80 +227,77 @@ public class Main extends Application {
 						textboxIndices.add(i);
 						textboxes.put(encryptSentence.charAt(i), textboxIndices);
 						textboxIndices = new ArrayList<Integer>();
+						
 					}
 					else{
+						//Disabling textbox as it is a space in the sentence
 						textField[i].setDisable(true);
-						gPaneP.add(textField[i], i%18, j + 1);
+						textField[i].setStyle("-fx-box-border: none;"+
+								  "-fx-background-insets: 0;"+
+								  "-fx-background-color: transparent, transparent;"+
+								  "-fx-background-radius: 0, 0, 0, 0;");
+						PuzzlePane.add(textField[i], i%18, j + 1);
+						encrypt_t[i].setDisable(true);
+						
 					}
-					encrypt_l[i] = new Label("  " + Character.toString(encryptSentence.charAt(i)));
-					gPaneP.add(encrypt_l[i], i%18, j+2);
+					PuzzlePane.add(encrypt_t[i], i%18, j+2);
 					if(cnt == 18){
 						j+=2;
 						cnt = 0;
 					}
 				}
-				gPanePMain.add(gPaneP, 0, 0);
-				AlphaFreV.setText(getFre());
-				UnusedAlphaV.setText(getUnused());
-				vpanel.getChildren().removeAll();
-		        vpanel.getChildren().clear();
-		        vpanel.getChildren().addAll(UnusedAlpha,UnusedAlphaV, AlphaFre,AlphaFreV);
-				st.setHeight(420 + (53 * ((encryptSentence.length() / 18) + 1)));//65
+				
+				AlphaFreV_L.setText(getFre());
+				UnusedAlphaV_L.setText(getUnused());
+				UnusedFrePane.getChildren().removeAll();
+				UnusedFrePane.getChildren().clear();
+				UnusedFrePane.getChildren().addAll(UnusedAlpha_L,UnusedAlphaV_L, AlphaFre_L,AlphaFreV_L);
+		        
+				st.setHeight(420 + (60 * ((encryptSentence.length() / 18) + 1)));
 				System.out.println(textboxes);
 			});
 			
-			st.setOnCloseRequest(new EventHandler<WindowEvent>() {
-	          public void handle(WindowEvent we) {
-	        	  try {
-						file_write();
-					} catch (FileNotFoundException e1) {
-						e1.printStackTrace();
-					} catch (IOException e1) {
-						e1.printStackTrace();
-					}
-	              System.out.println("Stage is closing");
-	          }});
-		          
-			Reset.setOnAction(e ->{
+			Reset_B.setOnAction(e ->{
 				for(int i = 0; i < encryptSentence.length(); i++){
 					if(textField[i].getText() != "") textField[i].setText("");
 				}
 				hintcnt = 0;
-				HintMe.setDisable(false);
+				HintMe_B.setDisable(false);
 			});
 			
 			//11 - To submit the puzzle. by - Rishikesh and Krina
-			Submit.setOnAction(e -> {
+			Submit_B.setOnAction(e -> {
+				StringBuilder sb = new StringBuilder();
+				Alert alert = new Alert(AlertType.INFORMATION);
+                alert.setTitle("Messsage");
+                
 				for(int i = 0; i < encryptSentence.length(); i++){
-					if(textField[i].isDisable()) continue;
+					if(textField[i].isDisable()){
+						sb.append(" ");
+						continue;
+					};
 					if(textField[i].getText().length() == 0){
-						Alert alert = new Alert(AlertType.INFORMATION);
-		                alert.setTitle("Messsage");
-//		                alert.setHeaderText("");
 		                alert.setContentText("Please fill all the boxes before submitting");
 		                alert.showAndWait();
 		                return;
 					}
-					if(textField[i].getText().charAt(0) != sentence.charAt(i)){
-						Alert alert = new Alert(AlertType.INFORMATION);
-		                alert.setTitle("Messsage");
-//		                alert.setHeaderText("");
-		                alert.setContentText("Incorrect guess");
-		                alert.showAndWait();
-		                Reset.fire();
-		                return;
-					}
+					sb.append(textField[i].getText().charAt(0));
 				}
-				Alert alert = new Alert(AlertType.INFORMATION);
-                alert.setTitle("Messsage");
-                alert.setContentText("You Won");
-                alert.showAndWait();
-                newPuzz.fire();
-                return;
+				if(pc.checkPuzzle(sb.toString())){
+	                alert.setContentText("You Won");
+	                alert.showAndWait();
+	                NewPuzz_B.fire();
+				}
+				else{
+	                alert.setContentText("Incorrect guess");
+	                alert.showAndWait();
+	                Reset_B.fire();
+	                return;
+				}
 			});
 			
 			//15 - To display "About Game" by - Rishikesh
-			About.setOnAction(e -> {
+			About_B.setOnAction(e -> {
 				Alert alert = new Alert(AlertType.INFORMATION);
                 alert.setTitle("About the game");
                 alert.setContentText("Cryptogram are short sentences which are replaced by an encrypted sentences"
@@ -351,9 +312,17 @@ public class Main extends Application {
 			});
 			
 			//14 - To give hint by - Rikhav and Daksh
-			HintMe.setOnAction(e -> {
+			HintMe_B.setOnAction(e -> {
+				if(hintcnt == 5){
+					Alert alert = new Alert(AlertType.INFORMATION);
+	                alert.setTitle("Hint");
+	                alert.setContentText("You have used all 5 hints");
+	                alert.showAndWait();
+	                HintMe_B.setDisable(true);
+	                return;
+				}
 				ArrayList<Integer> notGuessed = getNotGuessed(); 
-				rand = new Random();
+				Random rand = new Random();
 				if(notGuessed.size() == 0){
 					Alert alert = new Alert(AlertType.INFORMATION);
 	                alert.setTitle("Hint");
@@ -361,29 +330,25 @@ public class Main extends Application {
 	                alert.showAndWait();
 	                return;
 				}
-				if(hintcnt == 5){
-					Alert alert = new Alert(AlertType.INFORMATION);
-	                alert.setTitle("Hint");
-	                alert.setContentText("You have used all 5 hints");
-	                alert.showAndWait();
-	                HintMe.setDisable(true);
-	                return;
-				}
 				hintcnt++;
 				int x = rand.nextInt(notGuessed.size());
-				char encryptchar = encryptSentence.charAt(notGuessed.get(x));
-//				updateTextBoxes(encryptchar, Character.toString(sentence.charAt(notGuessed.get(x))));
-				textField[notGuessed.get(x)].setText(Character.toString(sentence.charAt(notGuessed.get(x))));
+				String hint = pc.getChar(notGuessed.get(x));
+				if(alphaGuessed[hint.charAt(0) - 65])
+					correctTextField(hint);
+				textField[notGuessed.get(x)].setText(hint);
 			});
 			
-			hpaneb.getChildren().addAll(Reset, newPuzz, HintMe, admin,Submit, About);
-			if(UnusedAlphaV.getText().length() == 0) vpanel.getChildren().addAll(UnusedAlpha, AlphaFre);
-			else vpanel.getChildren().addAll(UnusedAlpha,UnusedAlphaV, AlphaFre,AlphaFreV);
-			gpane.add(hpaneb,0,0);
-			gpane.add(gPaneH, 0, 1);
-			gpane.add(gPanePMain,0,2);
-			gpane.add(vpanel, 0, 3);
+			ButtonPane.getChildren().addAll(Reset_B, NewPuzz_B, HintMe_B, Admin_B,Submit_B, About_B);
+			
+//			if(UnusedAlphaV.getText().length() == 0) UnusedFrePane.getChildren().addAll(UnusedAlpha, AlphaFre);
+//			else UnusedFrePane.getChildren().addAll(UnusedAlpha,UnusedAlphaV, AlphaFre,AlphaFreV);
+			
+			MainPain.add(ButtonPane,0,0);
+			MainPain.add(HintDiffPane, 0, 1);
+			MainPain.add(PuzzlePane,0,2);
+			MainPain.add(UnusedFrePane, 0, 3);
 			st.setScene(scene);
+			NewPuzz_B.fire();
 			st.show();
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -392,12 +357,18 @@ public class Main extends Application {
 	
 	static void newPuzzle(){
 		
+		HBox hpane = new HBox(10);
+		GridPane root = new GridPane();
+		
 		Label hint_l = new Label("Hint(Max 30 char)");
 		Label sentence_l = new Label("Sentence(only alphabets & space allowed)");
 		Label errors_l = new Label("");
 		Label diff_l = new Label("Difficulty(1 - 5)");
 		Label errord_l = new Label("");
 		Label errord_e = new Label("");
+		
+		Button add = new Button("Add Puzzle");
+		Button back = new Button("Back");
 		
 		String diffLevel[] = {"1","2","3","4","5"}; 
 
@@ -413,12 +384,6 @@ public class Main extends Application {
             }
             return change ;
         }));
-		
-		Button add = new Button("Add Puzzle");
-		Button back = new Button("Back");
-		
-		HBox hpane = new HBox(10);
-		GridPane root = new GridPane();
 		
 		sentence_txt.setTextFormatter(new TextFormatter<String>((Change change) -> {
             String newText = change.getControlNewText();
@@ -444,10 +409,12 @@ public class Main extends Application {
 		root.add(errord_e, 1, 3);
 		
 		add.setOnAction(e -> {
+
+			String hint, sentence;//
+			int diff;//
 			
 	        hint = hint_txt.getText();
 	        sentence = sentence_txt.getText().toUpperCase();
-	        int x;
 	        
 	        if(hint.length() == 0 || sentence.length() == 0){
 	        	errord_e.setText("Please enter all the details");
@@ -456,7 +423,7 @@ public class Main extends Application {
 	        }
 	        
 	        try{
-	        	x = Integer.parseInt(combo_box.getValue().toString());
+	        	diff = Integer.parseInt(combo_box.getValue().toString());
 	        	combo_box.valueProperty().set(null);
 	        }catch(Exception z){
 	        	errord_e.setText("Select a value from dropdown");
@@ -464,10 +431,7 @@ public class Main extends Application {
 	        	return;
 	        }
 	      
-	        
-	        Puzzles p = new Puzzles(hint, sentence, x);
-	        list.add(p);
-	        System.out.println("Puzzle added to list " + list.size());
+	        pc.addPuzzle(sentence, hint, diff);
 	        sentence_txt.setText("");
 	        hint_txt.setText("");
 	        errord_e.setText("Puzzle added");
@@ -475,6 +439,7 @@ public class Main extends Application {
 	    });
 		
 		back.setOnAction(e -> {
+			pc.updateDB();
 			buildGui();
 		});
 		
@@ -483,48 +448,6 @@ public class Main extends Application {
 	    st.setHeight(175);
 	    st.setWidth(500);
 	    st.show();
-	}
-	
-	static public void file_write() throws FileNotFoundException, IOException{
-    	FileOutputStream file_op = new FileOutputStream("Puzzle_database.txt");           // FileNotFoundException 
-        ObjectOutputStream file  = new ObjectOutputStream(file_op);
-		for(Puzzles p : list){
-			file.writeObject(p);
-		}
-		file.close();
-		System.exit(0);
-	}
-	
-	private static String encrypt(String s){
-		char[] sub = GenerateKey();
-		StringBuilder op = new StringBuilder();
-		for(int i = 0; i < s.length();i++){
-			if(s.charAt(i) != ' '){
-				op.append(sub[s.charAt(i) - 65]);
-			}
-			else{
-				op.append(' ');
-			}
-		}
-		return op.toString();
-	}
-	
-	//12 - Generate new key everytime by - Daksh
-	private static char[] GenerateKey(){
-		char[] key = new char[26];
-		boolean[] visited = new boolean[26];
-		rand = new Random();
-		for(int i = 0; i < 26; i++){
-			int x = rand.nextInt(26);
-			if(visited[x] || x == i){
-				i--;
-				continue;
-			}
-			visited[x] = true;
-			key[i] = (char)(x + 65);
-		}
-		System.out.println();
-		return key;
 	}
 	
 	private static String getFre(){
@@ -570,7 +493,7 @@ public class Main extends Application {
 		Label pass_l = new Label("Password");
 		
 		TextField id_txt = new TextField("");
-		TextField pass_txt = new TextField("");
+		PasswordField pass_txt = new PasswordField();
 		
 		Button login = new Button("Login");
 		Button back = new Button("Back");
@@ -610,12 +533,27 @@ public class Main extends Application {
 	
 	static ArrayList<Integer> getNotGuessed(){
 		ArrayList<Integer> notGuessed = new ArrayList<Integer>();
-		for(int i = 0; i < sentence.length(); i++){
-			if(sentence.charAt(i) == ' ') continue;
-			if(alphaGuessed[sentence.charAt(i) - 65] == false){
-				notGuessed.add(i);
-			}
-		}
+		Iterator<Entry<Character, ArrayList<Integer>>> it = textboxes.entrySet().iterator();
+		while (it.hasNext()) { 
+            Entry<Character, ArrayList<Integer>> mapElement = it.next(); 
+            ArrayList<Integer> temp = mapElement.getValue();
+            if(textField[temp.get(0)].getText().length() == 0){
+            	notGuessed.add(temp.get(0));
+            }
+        }
+		System.out.println(notGuessed);
 		return notGuessed;
+	}
+	
+	static void correctTextField(String hint){
+		Iterator<Entry<Character, ArrayList<Integer>>> it = textboxes.entrySet().iterator();
+		while (it.hasNext()) { 
+            Entry<Character, ArrayList<Integer>> mapElement = it.next(); 
+            ArrayList<Integer> temp = mapElement.getValue();
+            if(textField[temp.get(0)].getText().equals(hint)){
+            	textField[temp.get(0)].setText("");
+                return;
+            }
+        }
 	}
 }
