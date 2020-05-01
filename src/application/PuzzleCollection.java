@@ -17,6 +17,7 @@ public class PuzzleCollection {
 	private static Puzzles currPuzzle;
 	private static Random rand;
 	
+	//5 - When the program starts, load the arraylist with all the puzzles by - Daksh
 	PuzzleCollection() throws FileNotFoundException, EmptyListException{
 		FileInputStream file_ip = new FileInputStream("Puzzle_database.txt");
 		try{
@@ -89,6 +90,7 @@ public class PuzzleCollection {
 		return key;
 	}
 	
+	//4 - Once admin logs out, write all the puzzles to the file - Krina
 	public void updateDB(){
 		try {
 			file_write();

@@ -1,5 +1,7 @@
 package application;
 	
+import java.awt.Robot;
+import java.awt.event.KeyEvent;
 import java.io.FileNotFoundException;
 import java.util.*;
 import java.util.Map.Entry;
@@ -24,7 +26,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 
 
-public class Main extends Application {
+public class Cryptogram extends Application {
 	
 	private static String encryptSentence;
 	private static PuzzleCollection pc;
@@ -64,6 +66,8 @@ public class Main extends Application {
 		    st.setWidth(670);
 			HBox ButtonPane = new HBox(10);
 			VBox UnusedFrePane = new VBox(10);
+			
+			Robot rb = new Robot();
 			
 			GridPane MainPain = new GridPane();
 			GridPane HintDiffPane = new GridPane();
@@ -117,6 +121,7 @@ public class Main extends Application {
 		        verifyAdmin();
 		    });
 				
+			//2 - Play a new puzzle by - Rishikesh
 			NewPuzz_B.setOnAction(e ->{
 				textboxes = new HashMap<Character, ArrayList<Integer>>();
 				alphaGuessed = new boolean[26];
@@ -200,6 +205,7 @@ public class Main extends Application {
 				        UnusedFrePane.getChildren().removeAll();
 				        UnusedFrePane.getChildren().clear();
 				        UnusedFrePane.getChildren().addAll(UnusedAlpha_L,UnusedAlphaV_L, AlphaFre_L,AlphaFreV_L);
+				        if(index < encryptSentence.length() - 1) rb.keyPress(KeyEvent.VK_TAB);
 				    });
 					
 					encrypt_t[i] = new TextField(Character.toString(encryptSentence.charAt(i)));
@@ -257,6 +263,7 @@ public class Main extends Application {
 				System.out.println(textboxes);
 			});
 			
+			//3 - Reset the puzzle i.e. make all text boxes empty by - Rikhav
 			Reset_B.setOnAction(e ->{
 				for(int i = 0; i < encryptSentence.length(); i++){
 					if(textField[i].getText() != "") textField[i].setText("");
@@ -355,6 +362,7 @@ public class Main extends Application {
 		}
 	}
 	
+	//1 - Add a new puzzle by - Rikhav
 	static void newPuzzle(){
 		
 		HBox hpane = new HBox(10);
@@ -450,6 +458,7 @@ public class Main extends Application {
 	    st.show();
 	}
 	
+	//7 - Make a string of frequency of alphabets by - Rishikesh
 	private static String getFre(){
 		StringBuilder frestr = new StringBuilder();
 		for(int i = 0; i < 26; i++){
@@ -462,6 +471,7 @@ public class Main extends Application {
 		return frestr.toString();
 	}
 	
+	//6 - Make a string of unused alphabets by - Rikhav
 	private static String getUnused(){
 		StringBuilder unusedstr = new StringBuilder();
 		for(int i = 0; i < 26; i++){
