@@ -18,8 +18,8 @@ public class PuzzleCollection {
 	private static Random rand;
 	
 	//5 - When the program starts, load the arraylist with all the puzzles by - Daksh
-	PuzzleCollection() throws FileNotFoundException, EmptyListException{
-		FileInputStream file_ip = new FileInputStream("Puzzle_database.txt");
+	PuzzleCollection(String fileName) throws FileNotFoundException, EmptyListException{
+		FileInputStream file_ip = new FileInputStream(fileName);
 		try{
 			ObjectInputStream file = new ObjectInputStream(file_ip);
 			try{
@@ -39,6 +39,8 @@ public class PuzzleCollection {
 			e.printStackTrace();
 		}
 	}
+	
+	public PuzzleCollection() {}
 	
 	public String SelectPuzzle(){
 		rand = new Random();
@@ -91,9 +93,9 @@ public class PuzzleCollection {
 	}
 	
 	//4 - Once admin logs out, write all the puzzles to the file - Krina
-	public void updateDB(){
+	public void updateDB(String fileName){
 		try {
-			file_write();
+			file_write(fileName);
 		} catch (FileNotFoundException e1) {
 			e1.printStackTrace();
 		} catch (IOException e1) {
@@ -101,8 +103,8 @@ public class PuzzleCollection {
 		}
 	}
 	
-	static public void file_write() throws FileNotFoundException, IOException{
-    	FileOutputStream file_op = new FileOutputStream("Puzzle_database.txt");           // FileNotFoundException 
+	static private void file_write(String fileName) throws FileNotFoundException, IOException{
+    	FileOutputStream file_op = new FileOutputStream(fileName);           // FileNotFoundException 
         ObjectOutputStream file  = new ObjectOutputStream(file_op);
 		for(Puzzles p : list){
 			file.writeObject(p);

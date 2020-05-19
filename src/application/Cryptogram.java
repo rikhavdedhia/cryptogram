@@ -28,6 +28,7 @@ import javafx.scene.text.Font;
 
 public class Cryptogram extends Application {
 	
+	private static String fileName;
 	private static String encryptSentence;
 	private static PuzzleCollection pc;
 	private static Stage st;
@@ -47,16 +48,24 @@ public class Cryptogram extends Application {
 		st.setTitle("Cryptogram");
 		System.out.println("SPM Project: A Cryptogram\nCode by:- \n\tRikhav Nilesh Dedhia\n\tRishikesh Maddi"
 				+ "\n\tDaksh Parikh\n\tKrina Karia");
+		initiate();
+	}
+	
+	private static void initiate(){
 		try{
-			pc = new PuzzleCollection();
+			pc = new PuzzleCollection(fileName);
 			buildGui();
 		}
 		catch (FileNotFoundException | EmptyListException e) {
+			pc = new PuzzleCollection();
 			verifyAdmin();
 		}
 	}
 	
 	public static void main(String[] args) {
+//		fileName = args[0];
+		fileName = "Puzzle_database.txt";
+		System.out.println(fileName);
 		launch(args);
 	}
 	
@@ -447,8 +456,8 @@ public class Cryptogram extends Application {
 	    });
 		
 		back.setOnAction(e -> {
-			pc.updateDB();
-			buildGui();
+			pc.updateDB(fileName);
+			initiate();
 		});
 		
 		final Scene scene = new Scene(root, 500, 400);
@@ -524,7 +533,7 @@ public class Cryptogram extends Application {
 		});
 		
 		back.setOnAction(e -> {
-			buildGui();
+			initiate();
 		});
 		
 		root.add(id_l, 0, 0);

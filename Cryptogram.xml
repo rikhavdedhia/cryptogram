@@ -11,7 +11,7 @@
   <downloadUrl>http://java.com/download</downloadUrl>
   <supportUrl></supportUrl>
   <stayAlive>false</stayAlive>
-  <restartOnCrash>false</restartOnCrash>
+  <restartOnCrash>true</restartOnCrash>
   <manifest></manifest>
   <icon>E:\Study Material\SEM4\SPM\Project\Cryptogram\Graphicloads-Flat-Finance-Puzzle.ico</icon>
   <jre>
